@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -31,42 +32,47 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> orderedSongNames() {
-        return null;
+        return songs.stream().map(Song::getSongName).sorted();
     }
 
     @Override
     public Stream<String> albumNames() {
-        return null;
+        return albums.keySet().stream();
     }
 
     @Override
     public Stream<String> albumInYear(final int year) {
-        return null;
+        return albums.keySet().stream().filter(k -> albums.get(k) == year);
     }
 
     @Override
     public int countSongs(final String albumName) {
-        return -1;
+        return (int) songs.stream().filter(s -> s.getAlbumName().isPresent() && s.getAlbumName().get().equals(albumName)).count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return -1;
+        return (int) songs.stream().filter(s -> !s.getAlbumName().isPresent()).count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return null;
+        return songs.stream().filter(s -> s.getAlbumName().isPresent() && s.getAlbumName().get().equals(albumName))
+                .mapToDouble(Song::getDuration).average();
     }
 
     @Override
     public Optional<String> longestSong() {
-        return null;
+        return songs.stream().max((a, b) -> Double.compare(a.getDuration(), b.getDuration())).map(Song::getSongName);
     }
 
     @Override
     public Optional<String> longestAlbum() {
-        return null;
+        return songs.stream().filter(s -> s.getAlbumName().isPresent())
+                .collect(Collectors.groupingBy(Song::getAlbumName, Collectors.summingDouble(Song::getDuration)))
+                .entrySet().stream()
+                .max((a, b) -> Double.compare(a.getValue(), b.getValue()))
+                .flatMap(s -> s.getKey());
     }
 
     private static final class Song {
@@ -107,7 +113,7 @@ public final class MusicGroupImpl implements MusicGroup {
         public boolean equals(final Object obj) {
             if (obj instanceof Song) {
                 final Song other = (Song) obj;
-                return albumName.equals(other.albumName) && songName.equals(other.songName)
+                return albumName.equals(other.getAlbumName()) && songName.equals(other.songName)
                         && duration == other.duration;
             }
             return false;
