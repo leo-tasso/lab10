@@ -6,9 +6,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
@@ -30,7 +28,8 @@ import javax.swing.JTextArea;
  *
  * 4) List all the words in alphabetical order
  * 
- * 5) Write the count for each word, e.g. "word word pippo" should output "pippo -> 1 word -> 2"
+ * 5) Write the count for each word, e.g. "word word pippo" should output "pippo
+ * -> 1 word -> 2"
  *
  */
 public final class LambdaFilter extends JFrame {
@@ -42,25 +41,31 @@ public final class LambdaFilter extends JFrame {
          * Commands.
          */
         IDENTITY("No modifications", Function.identity()),
+        LOWER("Convert to lowercase", String::toLowerCase),
         CHARS("Count the number of chars", s -> Integer.toString(s.length())),
         LINES("Count the number of lines", s -> Long.toString(s.chars().filter(e -> e == '\n').count() + 1)),
         ORDER("List all the words in alphabetical order", s -> Arrays.stream(s.split("[ \t\n]+")).sorted()
-        .collect(Collectors.joining("\n"))),
-        COUNTER("Write the count for each word", new Function<String, String>() {
-
-            @Override
-            public String apply(final String t) {
-                int counter = 0;
-                final StringBuilder ret = new StringBuilder("");
-                final List<String> l = new ArrayList<String>(Arrays.asList(t.split("[ \t\n]+")));
-                for (final String s: l) {
-                    counter++; 
-                     ret.append(s + " -> " + counter + "\n");
-                }
-                return ret.toString();
-            }
-
-        });
+                .collect(Collectors.joining("\n"))),
+        COUNTER("Write the count for each word", s -> Arrays.stream(s.split("[ \t\n]+"))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting())).toString());
+        /*
+         * new Function<String, String>() {
+         * 
+         * @Override
+         * public String apply(final String t) {
+         * int counter = 0;
+         * final StringBuilder ret = new StringBuilder("");
+         * final List<String> l = new
+         * ArrayList<String>(Arrays.asList(t.split("[ \t\n]+")));
+         * for (final String s: l) {
+         * counter++;
+         * ret.append(s + " -> " + counter + "\n");
+         * }
+         * return ret.toString();
+         * }
+         * 
+         * });
+         */
 
         private final String commandName;
         private final Function<String, String> fun;
